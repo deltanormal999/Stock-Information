@@ -1,12 +1,12 @@
-name: NIFTY Mean Reversion Daily Run
+name: TEST - Every 15 Minutes (delete this file once confirmed working)
 
 on:
   schedule:
-    # Runs at 12:30 UTC = 6:00 PM IST, Monday-Friday.
-    # GitHub's cron scheduler can lag a few minutes during high load
-    # (documented behavior, not a bug in this file).
-    - cron: "30 12 * * 1-5"
-  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab, for testing
+    # 5-minute intervals are the documented floor but are the least reliable in
+    # practice (GitHub explicitly warns short intervals get delayed/dropped
+    # more often under load). 15 minutes is much more consistently honored.
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}   # also allows a manual run, useful to sanity-check right away
 
 jobs:
   run-strategy:
@@ -37,14 +37,3 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python nifty_mean_reversion.py
-
-      - name: Upload chart + log as run artifact (optional backup)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nifty-run-output
-          path: |
-            latest_chart.png
-            run_log.txt
-          retention-days: 14
-          if-no-files-found: ignore
