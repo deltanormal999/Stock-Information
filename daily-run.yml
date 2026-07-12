@@ -1,0 +1,50 @@
+name: NIFTY Mean Reversion Daily Run
+
+on:
+  schedule:
+    # Runs at 12:30 UTC = 6:00 PM IST, Monday-Friday.
+    # GitHub's cron scheduler can lag a few minutes during high load
+    # (documented behavior, not a bug in this file).
+    - cron: "30 12 * * 1-5"
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab, for testing
+
+jobs:
+  run-strategy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run strategy and send Telegram notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python nifty_mean_reversion.py
+
+      - name: Upload chart + log as run artifact (optional backup)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nifty-run-output
+          path: |
+            latest_chart.png
+            run_log.txt
+          retention-days: 14
+          if-no-files-found: ignore
