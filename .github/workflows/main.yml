@@ -5,7 +5,7 @@ on:
     # 5-minute intervals are the documented floor but are the least reliable in
     # practice (GitHub explicitly warns short intervals get delayed/dropped
     # more often under load). 15 minutes is much more consistently honored.
-    - cron: "*/15 * * * *"
+    - cron: "10 4 * * *"
   workflow_dispatch: {}   # also allows a manual run, useful to sanity-check right away
 
 jobs:
